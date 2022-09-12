@@ -11,7 +11,7 @@ class client:
         self.c_key = c_key
         self.redirect_url = redirect_url
         self.auth_code = None
-
+        self.token = None
 
     def authorize(self):
         if self.auth_code is None:
@@ -22,20 +22,20 @@ class client:
                 r_get = session.get(url, allow_redirects= True)
                 soup = BeautifulSoup(r_get.text, "lxml")
                 hidden_inputs = soup.findAll("input")
-                payload = {}
+                form_params = {}
 
                 for elements in hidden_inputs:
                     name = elements.get("name")
                     value = elements.get("value")
                     if value != "" and name != "reject":
-                        payload[name] = value
+                        form_params[name] = value
 
                 # add in user id and pw, this is NOT the developer account's user id and pw but the trading account's id and pw
-                payload["su_username"] = self.id
-                payload["su_password"] = self.pw
+                form_params["su_username"] = self.id
+                form_params["su_password"] = self.pw
                 
                 # this will refresh the page, that contains a new form that asks for permission 
-                r_post = session.post(url, data = payload)
+                r_post = session.post(url, data = form_params)
 
                 # post again allow
 
@@ -48,7 +48,7 @@ class client:
                 auth_code = auth_code[auth_code.index("=") + 1:]
 
                 # decode the auth code
-                auth_code = parse.unquote(auth_code, safe = "")
+                auth_code = parse.unquote(auth_code)
                 self.auth_code = auth_code
 
                 return None
