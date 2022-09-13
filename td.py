@@ -120,7 +120,7 @@ class client:
 
     def price_history_threading(self, stocks, params):
         '''
-        how the param works
+        params explanation
 
         periodType:
         period:
