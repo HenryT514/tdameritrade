@@ -46,6 +46,8 @@ class client:
                     r_post = session.post(url, data = {"authorize" : "Allow"})
                 except requests.exceptions.ConnectionError as error:
                     auth_code = error.request.url
+
+                
                 
                 # the actual auth code is only part of the url, all characters behind "="
                 auth_code = auth_code[auth_code.index("=") + 1:]
@@ -53,6 +55,8 @@ class client:
                 # decode the auth code
                 auth_code = parse.unquote(auth_code)
                 self.auth_code = auth_code
+
+                session.close()
 
                 return None
         else:
@@ -70,7 +74,6 @@ class client:
             "redirect_uri": self.redirect_url
         }
         r_post = requests.post(url, data= data).json()
-
         self.access_token = r_post["access_token"]
         self.refresh_token = r_post["refresh_token"]
         self.expire_time = time.time() + 25 * 60 # refresh in 25 mins
@@ -88,10 +91,11 @@ class client:
                 "refresh_token" : self.refresh_token,
                 "client_id" : self.c_key,
                 "redirect_uri" : self.redirect_url
-            }
+                 }
 
             r_post = requests.post(url, data = data).json()
             self.access_token = r_post["access_token"]
+            self.expire_time = time.time() + 25 * 60 # refresh in 25 mins
             return self.access_token
 
 
