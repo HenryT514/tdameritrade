@@ -3,9 +3,11 @@ from bs4 import BeautifulSoup
 from urllib import parse
 import time
 import datetime as dt
+from functools import partial
+from concurrent.futures import ThreadPoolExecutor
 
 
-class client:
+class Client:
     def __init__(self, id, password, c_key, redirect_url):
         self.id = id
         self.pw = password
@@ -40,7 +42,7 @@ class client:
                 # this will refresh the page, that contains a new form that asks for permission 
                 r_post = session.post(url, data = form_params)
 
-                # post again to allow
+                # post again to allow -> bring to a page showing connection error with the auth code in the url <- the auth code needed
 
                 try:
                     r_post = session.post(url, data = {"authorize" : "Allow"})
@@ -73,15 +75,19 @@ class client:
             "client_id": self.c_key,
             "redirect_uri": self.redirect_url
         }
-        r_post = requests.post(url, data= data).json()
-        self.access_token = r_post["access_token"]
-        self.refresh_token = r_post["refresh_token"]
+        r_post = requests.post(url, data= data)
+
+        assert r_post.status_code == 200 , "request failed , status code {}".format(r_post.status_code)
+        contents = r_post.json()
+
+        self.access_token = contents["access_token"]
+        self.refresh_token = contents["refresh_token"]
         self.expire_time = time.time() + 25 * 60 # refresh in 25 mins
         return None
 
 
     def get_access_token(self):
-        if time.time() < self.expire_time:
+        if time.time() < self.expire_time and self.access_token != None :
             return self.access_token
         else:
             url = "https://api.tdameritrade.com/v1/oauth2/token"
@@ -93,8 +99,12 @@ class client:
                 "redirect_uri" : self.redirect_url
                  }
 
-            r_post = requests.post(url, data = data).json()
-            self.access_token = r_post["access_token"]
+            r_post = requests.post(url, data = data)
+
+            assert r_post.status_code == 200 , "request failed , status code {}".format(r_post.status_code)
+
+            contents = r_post.json()
+            self.access_token = contents["access_token"]
             self.expire_time = time.time() + 25 * 60 # refresh in 25 mins
             return self.access_token
 
@@ -104,59 +114,137 @@ class client:
         self.initiate_tokens()
         return None
 
-# Price History
-# params 
-# {
-# "periodType":""
-# "period":"",
-# "frequencyType":"",
-# "frequency":"",
-# "endDate":"",
-# "startDate":"",
-# "needExtendedHoursData":""
-# }
 
-
-
-    def price_history_threading(self, stocks, params):
-        '''
-        params explanation
-
-        periodType:
-        period:
-        frequencyType:
-        frequency:
-        endDate:
-        startDate:
-
-        '''
-        symbol = None
+    #api endpts
+    
+    def __get_price_history(self, symbol, params):
         url = f"https://api.tdameritrade.com/v1/marketdata/{symbol}/pricehistory"
-        pass
+
         
         # additional params
         params["apikey"] = self.c_key
         header = "Bearer " + self.get_access_token()
-        data = requests.get(url, headers = {'Authorization' : header}, params = params).json()
-        pass
-        
+        r_get = requests.get(url, headers = {'Authorization' : header}, params = params)
 
+        assert r_get.status_code == 200 , "request failed , status code {}".format(r_get.status_code)
         
-    def price_history(self, stock, params):
-        symbol = stock
-        url = f"https://api.tdameritrade.com/v1/marketdata/{symbol}/pricehistory"
-        
-        # additional params
-        params["apikey"] = self.c_key
-        header = "Bearer " + self.get_access_token()
-        data = requests.get(url, headers = {'Authorization' : header}, params = params).json()
+        data = r_get.json()
         return data["candles"]
         
 
+    def get_price_history(self, params, symbols):
+        """
+        params
+        {
+            periodType: None,
+            period : None,
+            frequencyType : None,
+            frequency : None,
+            endDate : None,
+            startDate : None,
+            needExtendedHoursData : true
+        }
+        period should not be used if endDate and startDate is provided
 
+        both endDate and startDate need to be provided together
+        """
+
+        # if datetime supplied # modify params here
+        if ("startDate" in params.keys() or "endDate" in params.keys()) and (params["startDate"] != None or params["endDate"] != None):
+            assert isinstance(params["startDate"], dt.datetime) , "startDate not datetime"
+            assert isinstance(params["endDate"], dt.datetime) , "endDate not datetime"
+            params["endDate"] = int(params["endDate"].timestamp() * 1000)
+            params["startDate"] = int(params["startDate"].timestamp() * 1000)
+
+        
+        new_func = partial(self.__get_price_history, params = params)
+        pool = ThreadPoolExecutor()
+        data = list(pool.map(new_func, symbols))
+        return data
   
 
 
+    def __get_option_chain(self, symbol, params):
+        url = f"https://api.tdameritrade.com/v1/marketdata/chains"
+        
+        # additional params
+        params["apikey"] = self.c_key
+        params["symbol"] = symbol
+        header = "Bearer " + self.get_access_token()
+        r_get = requests.get(url, headers = {'Authorization' : header}, params = params)
+
+        assert r_get.status_code == 200 , "request failed , status code {}".format(r_get.status_code)
+        
+        data = r_get.json()
+        return data
+
+    def get_option_chain(self, symbols, params):
+
+        """
+        params
+
+        {
+            contractType : ,
+            strikeCount : ,
+            includedQuotes : ,
+            strategy : ,
+            interval : ,
+            strike : ,
+            range : ,
+            fromDate : ,
+            toDate : ,
+            volatility : ,
+            underlyingPrice : ,
+            interestRate : ,
+            daysToExpiration : ,
+            expMonth : ,
+            optionType : "ALL"
+        }
+        
+        """
+        new_func = partial(self.__get_option_chain, params = params)
+        pool = ThreadPoolExecutor()
+        data = list(pool.map(new_func, symbols))
+        return data
+
+    def __search_instruments(self, symbol, params):
+        
+        url = "https://api.tdameritrade.com/v1/instruments"
+        params["symbol"] = symbol
+        params["apikey"] = self.c_key
+        header = "Bearer " + self.get_access_token()
+        r_get = requests.get(url, headers = {'Authorization' : header}, params = params)
+
+        assert r_get.status_code == 200 , "request failed , status code {}".format(r_get.status_code)
+        data = r_get.json()
+        return data
+
+    def search_instruments(self, symbols, params = {}):
+
+        """
+        {
+            projection:
+        }
+
+        """
+        new_func = partial(self.__get_option_chain, params = params)
+        pool = ThreadPoolExecutor()
+        data = list(pool.map(new_func, symbols))
+        return data
 
 
+    def __get_instrument(self, cusip):
+        url = f"https://api.tdameritrade.com/v1/instruments/{cusip}"
+        header = "Bearer " + self.get_access_token()
+        r_get = requests.get(url, headers = {'Authorization' : header})
+        assert r_get.status_code == 200 , "request failed , status code {}".format(r_get.status_code)
+        data = r_get.json()
+        return data
     
+    def get_instrument(self,cusips):
+        pool = ThreadPoolExecutor()
+        data = list(pool.map(self.__get_instrument, cusips))
+        return data
+
+ 
+
