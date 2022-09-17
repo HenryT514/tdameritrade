@@ -52,14 +52,13 @@ params =  {
 
 instruments = ["AAPL"]
 d = client.get_price_history(symbols = instruments, params= params)
-d
-
+d[0]
 ~~~
 
 ## Output
 
 ~~~python
-[{'candles': [{'open': 157.96,
+{'candles': [{'open': 157.96,
     'high': 158.03,
     'low': 157.96,
     'close': 158.03,
@@ -77,25 +76,59 @@ d
     'datetime': 1662474840000},
    ...],
   'symbol': 'AAPL',
-  'empty': False}]
+  'empty': False}
 ~~~
 
 ## Getting price history of multiple stocks
 ~~~python
 params =  {
-            "periodType":"day",
-            "period":10,
             "frequencyType":"minute",
-            "frequency":1,
-            "endDate":None,
-            "startDate" :None,
+            "endDate":dt.datetime(2022,9,15),
+            "startDate" : dt.datetime(2022,8,1),
             "needExtendedHoursData": True
-
-instruments = ["AAPL"]
+        }
+instruments = ["AAPL","TSLA","GOOG","MSFT","AMZN","AMD","NVDA","BBBY","GME","SPY","/ES"]
 d = client.get_price_history(symbols = instruments, params= params)
-d
+d[-1] #
+~~~
+
+## Output
+
+~~~python
+{'candles': [{'open': 88.6,
+   'high': 88.64,
+   'low': 88.26,
+   'close': 88.57,
+   'volume': 47889,
+   'datetime': 1659360600000},
+  {'open': 88.63,
+   'high': 88.94,
+   'low': 88.52,
+   'close': 88.94,
+   'volume': 3519,
+   'datetime': 1659360660000},
+  {'open': 88.81,
+   'high': 89.23,
+   'low': 88.78,
+   'close': 89.14,
+   'volume': 13730,
+   'datetime': 1659360720000},
+  {'open': 89.11,
+   'high': 89.265,
+   'low': 89.11,
+   'close': 89.265,
+   'volume': 1589,
+   'datetime': 1659360780000},
+  {'open': 89.2,
+...
+   'volume': 603,
+   'datetime': 1659546960000},
+  ...],
+ 'symbol': 'ES',
+ 'empty': False}
 
 ~~~
+
 
 
 # Getting Option chain
