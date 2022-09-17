@@ -129,7 +129,7 @@ class Client:
         assert r_get.status_code == 200 , "request failed , status code {}".format(r_get.status_code)
         
         data = r_get.json()
-        return data["candles"]
+        return data
         
 
     def get_price_history(self, params, symbols):
