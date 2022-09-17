@@ -12,7 +12,8 @@ client.login()
 
 ### Getting historic prices
 
-```
 
 ```
 
+
+```
