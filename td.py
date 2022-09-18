@@ -1,10 +1,12 @@
 import requests
-from bs4 import BeautifulSoup
-from urllib import parse
 import time
 import datetime as dt
 from functools import partial
 from concurrent.futures import ThreadPoolExecutor
+from copy import deepcopy
+from bs4 import BeautifulSoup
+from urllib import parse
+
 
 
 class Client:
@@ -207,11 +209,9 @@ class Client:
         data = list(pool.map(new_func, symbols))
         return data
 
-    def __search_instruments(self, symbol, params):
+    def __search_instruments(self, params):
         
         url = "https://api.tdameritrade.com/v1/instruments"
-        params["symbol"] = symbol
-        params["apikey"] = self.c_key
         header = "Bearer " + self.get_access_token()
         r_get = requests.get(url, headers = {'Authorization' : header}, params = params)
 
@@ -219,17 +219,14 @@ class Client:
         data = r_get.json()
         return data
 
-    def search_instruments(self, symbols, params = {}):
 
-        """
-        {
-            projection:
-        }
-
-        """
-        new_func = partial(self.__get_option_chain, params = params)
+    def search_instruments(self, symbols, projection):
+        params = [deepcopy(projection) for _ in range(len(symbols))]
+        for param, symbol in zip(params,symbols):
+            param["symbol"] = symbol
+            param["apikey"] = self.c_key
         pool = ThreadPoolExecutor()
-        data = list(pool.map(new_func, symbols))
+        data = list(pool.map(self.__search_instruments, params))
         return data
 
 
