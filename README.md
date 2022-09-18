@@ -38,7 +38,19 @@ client.login()
 
 # Getting historic prices <a id = "link1"></a>
 
+* periodType : "day" / "month" / "year" / "ytd" (year to date)
+* period : int
+* frequencyType : "minute"/ "daily"/ "weekly"/ "monthly"
+* frequency : int
+* endDate : dt object
+* startDate : dt object
+* needExtendedHoursData : if True, provides premarket and after hours data
 
+<i>If startDate and endDate are provided, period should not be provided</i>
+
+<i>Available data differs for different frequencies. For example avalible data for minute frequency only goes back ~ a month </i>
+
+more infomation at : https://developer.tdameritrade.com/price-history/apis/get/marketdata/%7Bsymbol%7D/pricehistory
 
 ~~~python
 params =  {
@@ -57,7 +69,7 @@ d[0]
 
 ## Output
 
-~~~python
+~~~
 {'candles': [{'open': 157.96,
     'high': 158.03,
     'low': 157.96,
@@ -89,12 +101,12 @@ params =  {
         }
 instruments = ["AAPL","TSLA","GOOG","MSFT","AMZN","AMD","NVDA","BBBY","GME","SPY","/ES"]
 d = client.get_price_history(symbols = instruments, params= params)
-d[-1] # #
+d[-1] # outputs a list of json objects
 ~~~
 
 ## Output
 
-~~~python
+~~~
 {'candles': [{'open': 88.6,
    'high': 88.64,
    'low': 88.26,
@@ -165,6 +177,12 @@ open	high	low	close	volume	datetime	symbol
 
 # Getting Option chain  <a id = "link2"> </a>
 
+Getting a snapshot of the option chain (at current time)
+
+more information at: https://developer.tdameritrade.com/option-chains/apis/get/marketdata/chains
+
+<i>No historical option data</i>
+
 ~~~ python
 params= {
             'contractType' : "ALL" ,
@@ -229,51 +247,81 @@ d
 
 
 
-
 # Search instruments <a id = "link3"> </a>
 
-~~~ python
+more information at: https://developer.tdameritrade.com/instruments/apis/get/instruments
 
-d = client.search_instruments(symbol = "AAPl",params = {"projection" : "fundamental"})
+~~~ python
+symbols = ["AAPL","WMT","M"]
+d = client.search_instruments(symbols = symbols, projection = {"projection" : "fundamental"})
 d
 ~~~
 
 ### Output
 
 ~~~ python
-{'AAPL': {'fundamental': {'symbol': 'AAPL',
-   'high52': 182.94,
-   'low52': 129.04,
-   'dividendAmount': 0.92,
-   'dividendYield': 0.61,
-   'dividendDate': '2022-08-05 00:00:00.000',
-   'peRatio': 24.90102,
-   'pegRatio': 1.344299,
-   'pbRatio': 41.74322,
-   'prRatio': 6.24929,
-   'pcfRatio': 21.84594,
-   'grossMarginTTM': 43.31427,
-   'grossMarginMRQ': 43.25631,
-   'netProfitMarginTTM': 25.70896,
-   'netProfitMarginMRQ': 23.43567,
-   'operatingMarginTTM': 30.53321,
-   'operatingMarginMRQ': 27.81615,
-   'returnOnEquity': 162.8163,
-   'returnOnAssets': 29.91313,
-   'returnOnInvestment': 46.50076,
-   'quickRatio': 0.8228,
-   'currentRatio': 0.86463,
-   'interestCoverage': 0.0,
-   'totalDebtToCapital': 67.31853,
-   'ltDebtToEquity': 162.9752,
+[{'AAPL': {'fundamental': {'symbol': 'AAPL',
+    'high52': 182.94,
+    'low52': 129.04,
+    'dividendAmount': 0.92,
+    'dividendYield': 0.61,
+    'dividendDate': '2022-08-05 00:00:00.000',
+    'peRatio': 24.90102,
+    'pegRatio': 1.344299,
+    'pbRatio': 41.74322,
+    'prRatio': 6.24929,
+    'pcfRatio': 21.84594,
+    'grossMarginTTM': 43.31427,
+    'grossMarginMRQ': 43.25631,
+    'netProfitMarginTTM': 25.70896,
+    'netProfitMarginMRQ': 23.43567,
+    'operatingMarginTTM': 30.53321,
+    'operatingMarginMRQ': 27.81615,
+    'returnOnEquity': 162.8163,
+    'returnOnAssets': 29.91313,
+    'returnOnInvestment': 46.50076,
+    'quickRatio': 0.8228,
+    'currentRatio': 0.86463,
+    'interestCoverage': 0.0,
+    'totalDebtToCapital': 67.31853,
+    'ltDebtToEquity': 162.9752,
 ...
-  'cusip': '037833100',
-  'symbol': 'AAPL',
-  'description': 'Apple Inc. - Common Stock',
-  'exchange': 'NASDAQ',
-  'assetType': 'EQUITY'}}
+   'cusip': '55616P104',
+   'symbol': 'M',
+   'description': "Macy's Inc Common Stock",
+   'exchange': 'NYSE',
+   'assetType': 'EQUITY'}}]
 
 ~~~
 
 
 # Get instruments <a id = "link4"> </a>
+
+more information at: https://developer.tdameritrade.com/instruments/apis/get/instruments/%7Bcusip%7D
+
+~~~ python
+cusips = ["037833100","55616P104","931142103"]
+client.get_instrument(cusips = cusips)
+~~~
+
+
+## Output
+
+~~~
+[[{'cusip': '037833100',
+   'symbol': 'AAPL',
+   'description': 'Apple Inc. - Common Stock',
+   'exchange': 'NASDAQ',
+   'assetType': 'EQUITY'}],
+ [{'cusip': '55616P104',
+   'symbol': 'M',
+   'description': "Macy's Inc Common Stock",
+   'exchange': 'NYSE',
+   'assetType': 'EQUITY'}],
+ [{'cusip': '931142103',
+   'symbol': 'WMT',
+   'description': 'Walmart Inc. Common Stock',
+   'exchange': 'NYSE',
+   'assetType': 'EQUITY'}]]
+
+~~~

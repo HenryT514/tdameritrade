@@ -136,6 +136,8 @@ class Client:
 
     def get_price_history(self, params, symbols):
         """
+        # takes in a list of tickers
+
         params
         {
             periodType: None,
@@ -149,6 +151,8 @@ class Client:
         period should not be used if endDate and startDate is provided
 
         both endDate and startDate need to be provided together
+
+        outputs a list of json objects
         """
 
         # if datetime supplied # modify params here
@@ -183,6 +187,8 @@ class Client:
     def get_option_chain(self, symbols, params):
 
         """
+        # takes in a list of tickers
+
         params
 
         {
@@ -202,7 +208,8 @@ class Client:
             expMonth : ,
             optionType : "ALL"
         }
-        
+
+        outputs a list of json objects
         """
         new_func = partial(self.__get_option_chain, params = params)
         pool = ThreadPoolExecutor()
@@ -221,6 +228,16 @@ class Client:
 
 
     def search_instruments(self, symbols, projection):
+        """
+        takes in a list of tickers
+        {
+            projection :  fundamental / symbol-search / desc-regex / desc-search / symbol-regex
+
+        }
+        outputs a list of json objects
+
+        """
+
         params = [deepcopy(projection) for _ in range(len(symbols))]
         for param, symbol in zip(params,symbols):
             param["symbol"] = symbol
@@ -239,6 +256,11 @@ class Client:
         return data
     
     def get_instrument(self,cusips):
+
+        """
+        takes in a list of cusips
+        outputs a list of json objects
+        """
         pool = ThreadPoolExecutor()
         data = list(pool.map(self.__get_instrument, cusips))
         return data
