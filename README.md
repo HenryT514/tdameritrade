@@ -201,47 +201,46 @@ params= {
             'expMonth' : None,
             'optionType' : "ALL"
         }
-instruments = ["AAPL","TSLA","TSLA","MSFT","AMZN","AMD","NVDA","BBBY","GME","SPY","/ES"]
-d = client.get_option_chain(symbols = instruments, params= params)
-d
+instruments = ["AAPL","TSLA","WMT","MSFT","AMZN","AMD","NVDA","BBBY","GME","SPY","QQQ"]
+d = client.get_option_chain(symbols = instruments, parameters= params)
+d[4]
 ~~~
 
 ## Output
 
 ~~~
 
-[{'symbol': 'AAPL',
-  'status': 'SUCCESS',
-  'underlying': None,
-  'strategy': 'SINGLE',
-  'interval': 0.0,
-  'isDelayed': True,
-  'isIndex': False,
-  'interestRate': 0.1,
-  'underlyingPrice': 151.31,
-  'volatility': 29.0,
-  'daysToExpiration': 0.0,
-  'numberOfContracts': 1800,
-  'putExpDateMap': {'2022-09-23:6': {'70.0': [{'putCall': 'PUT',
-      'symbol': 'AAPL_092322P70',
-      'description': 'AAPL Sep 23 2022 70 Put (Weekly)',
-      'exchangeName': 'OPR',
-      'bid': 0.0,
-      'ask': 0.01,
-      'last': 0.0,
-      'mark': 0.01,
-      'bidSize': 0,
-      'askSize': 205,
-      'bidAskSize': '0X205',
-      'lastSize': 0,
-      'highPrice': 0.0,
+{'symbol': 'AMZN',
+ 'status': 'SUCCESS',
+ 'underlying': None,
+ 'strategy': 'SINGLE',
+ 'interval': 0.0,
+ 'isDelayed': True,
+ 'isIndex': False,
+ 'interestRate': 0.1,
+ 'underlyingPrice': 124.35,
+ 'volatility': 29.0,
+ 'daysToExpiration': 0.0,
+ 'numberOfContracts': 3674,
+ 'putExpDateMap': {'2022-09-23:5': {'65.0': [{'putCall': 'PUT',
+     'symbol': 'AMZN_092322P65',
+     'description': 'AMZN Sep 23 2022 65 Put (Weekly)',
+     'exchangeName': 'OPR',
+     'bid': 0.0,
+     'ask': 0.01,
+     'last': 0.0,
+     'mark': 0.01,
+     'bidSize': 0,
+     'askSize': 25,
+     'bidAskSize': '0X25',
+     'lastSize': 0,
+     'highPrice': 0.0,
 ...
-  'volatility': 0.0,
-  'daysToExpiration': 0.0,
-  'numberOfContracts': 6,
-  'putExpDateMap': {},
-  'callExpDateMap': {}}]
-
+     'intrinsicValue': -76.47,
+     'inTheMoney': False,
+     'nonStandard': False,
+     'mini': False,
+     'pennyPilot': True}]}}}
 
 ~~~
 

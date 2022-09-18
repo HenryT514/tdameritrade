@@ -170,12 +170,10 @@ class Client:
   
 
 
-    def __get_option_chain(self, symbol, params):
+    def __get_option_chain(self,  params):
         url = f"https://api.tdameritrade.com/v1/marketdata/chains"
         
-        # additional params
-        params["apikey"] = self.c_key
-        params["symbol"] = symbol
+        
         header = "Bearer " + self.get_access_token()
         r_get = requests.get(url, headers = {'Authorization' : header}, params = params)
 
@@ -184,12 +182,13 @@ class Client:
         data = r_get.json()
         return data
 
-    def get_option_chain(self, symbols, params):
+    def get_option_chain(self, symbols, parameters):
+
 
         """
         # takes in a list of tickers
 
-        params
+        parameters
 
         {
             contractType : ,
@@ -211,9 +210,13 @@ class Client:
 
         outputs a list of json objects
         """
-        new_func = partial(self.__get_option_chain, params = params)
+        params = [deepcopy(parameters) for _ in range(len(symbols))]
+        for param, symbol in zip(params,symbols):
+            param["symbol"] = symbol
+            param["apikey"] = self.c_key
+
         pool = ThreadPoolExecutor()
-        data = list(pool.map(new_func, symbols))
+        data = list(pool.map(self.__get_option_chain, params))
         return data
 
     def __search_instruments(self, params):
